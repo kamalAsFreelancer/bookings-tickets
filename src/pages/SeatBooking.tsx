@@ -14,6 +14,7 @@ export default function SeatBooking({ showId, onNavigate }: SeatBookingProps) {
   const [selectedSeats, setSelectedSeats] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
   const [booking, setBooking] = useState(false);
+  const [confirmationCode, setConfirmationCode] = useState<string | null>(null);
   const [error, setError] = useState('');
   const { user } = useAuth();
 
@@ -53,8 +54,14 @@ export default function SeatBooking({ showId, onNavigate }: SeatBookingProps) {
     try {
       const result = await api.bookTicket(user.id, showId, selectedSeats);
       if (result.success) {
-        alert(`Booking successful! Total: Rs. ${result.total_price}`);
-        onNavigate('my-bookings');
+        // store confirmation code and refresh seat layout so user can see their code
+        if (result.confirmation_code) {
+          setConfirmationCode(result.confirmation_code);
+        }
+        // refresh seats to reflect booked state
+        await loadSeats();
+        // show a success message inline instead of navigating away immediately
+        setError('');
       } else {
         const errorMsg = result.error || 'Booking failed';
         setError(errorMsg);
@@ -134,7 +141,7 @@ export default function SeatBooking({ showId, onNavigate }: SeatBookingProps) {
             {rows.map(row => (
               <div key={row} className="flex items-center gap-1 sm:gap-2">
                 <div className="w-6 sm:w-8 text-white font-semibold text-xs sm:text-base text-center">{row}</div>
-                <div className="flex gap-1 sm:gap-2">
+                <div className="flex gap-1 sm:gap-2 overflow-x-auto max-w-full py-1">
                   {Array.from({ length: seatsPerRow }, (_, i) => {
                     const seatNumber = `${row}${i + 1}`;
                     const status = getSeatStatus(seatNumber);
@@ -144,7 +151,7 @@ export default function SeatBooking({ showId, onNavigate }: SeatBookingProps) {
                         key={seatNumber}
                         onClick={() => toggleSeat(seatNumber, status === 'booked')}
                         disabled={status === 'booked'}
-                        className={`w-6 h-6 sm:w-8 sm:h-8 rounded-t-lg text-xs font-semibold transition ${
+                        className={`w-8 h-8 sm:w-10 sm:h-10 rounded-t-lg text-sm sm:text-base font-semibold transition ${
                           status === 'booked'
                             ? 'bg-red-600 cursor-not-allowed text-white'
                             : status === 'selected'
@@ -153,7 +160,7 @@ export default function SeatBooking({ showId, onNavigate }: SeatBookingProps) {
                         }`}
                         title={seatNumber}
                       >
-                        <span className="text-xs sm:text-sm">{i + 1}</span>
+                        <span className="text-sm sm:text-base">{i + 1}</span>
                       </button>
                     );
 
@@ -215,6 +222,36 @@ export default function SeatBooking({ showId, onNavigate }: SeatBookingProps) {
               >
                 {booking ? 'Processing...' : `Book ${selectedSeats.length} Seat${selectedSeats.length > 1 ? 's' : ''}`}
               </button>
+            </div>
+          )}
+
+          {confirmationCode && (
+            <div className="mt-4 bg-slate-700 rounded-lg p-4 sm:p-6">
+              <div className="text-gray-400 text-xs sm:text-sm mb-2">Your confirmation code</div>
+              <div className="flex items-center justify-between gap-4">
+                <div className="font-mono text-2xl sm:text-3xl text-white tracking-widest">{confirmationCode}</div>
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => {
+                      try {
+                        navigator.clipboard.writeText(confirmationCode);
+                      } catch (e) {
+                        // fallback: do nothing
+                      }
+                    }}
+                    className="bg-green-600 hover:bg-green-700 text-white px-3 py-2 rounded-lg text-sm sm:text-base"
+                  >
+                    Copy
+                  </button>
+
+                  <button
+                    onClick={() => onNavigate('my-bookings')}
+                    className="bg-slate-600 hover:bg-slate-500 text-white px-3 py-2 rounded-lg text-sm sm:text-base"
+                  >
+                    My Bookings
+                  </button>
+                </div>
+              </div>
             </div>
           )}
         </div>
