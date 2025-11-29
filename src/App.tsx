@@ -8,10 +8,13 @@ import MyBookings from './pages/MyBookings';
 import Collections from './pages/Collections';
 import Login from './pages/Login';
 import Register from './pages/Register';
+import PaymentSuccess from './pages/PaymentSuccess';
+import PaymentFailure from './pages/PaymentFailure';
 import AdminDashboard from './pages/admin/AdminDashboard';
 import AddMovie from './pages/admin/AddMovie';
 import ManageShows from './pages/admin/ManageShows';
 import ViewBookings from './pages/admin/ViewBookings';
+import ValidateTicket from './pages/admin/ValidateTicket';
 
 function AppContent() {
   const [currentPage, setCurrentPage] = useState('home');
@@ -80,6 +83,16 @@ function AppContent() {
         ) : (
           <HomePage onNavigate={handleNavigate} />
         );
+      case 'validate-ticket':
+        return isAdmin ? (
+          <ValidateTicket onNavigate={handleNavigate} />
+        ) : (
+          <HomePage onNavigate={handleNavigate} />
+        );
+      case 'payment-success':
+        return <PaymentSuccess confirmationCode="" bookingId={0} onNavigate={handleNavigate} />;
+      case 'payment-failure':
+        return <PaymentFailure onNavigate={handleNavigate} />;
       default:
         return <HomePage onNavigate={handleNavigate} />;
     }

@@ -57,8 +57,30 @@ CREATE TABLE IF NOT EXISTS bookings (
     seat_numbers TEXT NOT NULL COMMENT 'Comma-separated seat numbers',
     total_price DECIMAL(10, 2) NOT NULL,
     booking_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    confirmation_code VARCHAR(10) UNIQUE COMMENT 'Unique confirmation code for ticket validation',
+    payment_id INT DEFAULT NULL,
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
-    FOREIGN KEY (show_id) REFERENCES shows(id) ON DELETE CASCADE
+    FOREIGN KEY (show_id) REFERENCES shows(id) ON DELETE CASCADE,
+    FOREIGN KEY (payment_id) REFERENCES payments(id) ON DELETE SET NULL
+);
+
+-- Payments table
+CREATE TABLE IF NOT EXISTS payments (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    user_id INT NOT NULL,
+    show_id INT NOT NULL,
+    seat_numbers VARCHAR(255) NOT NULL,
+    amount DECIMAL(10, 2) NOT NULL,
+    transaction_id VARCHAR(100) UNIQUE NOT NULL,
+    esewa_ref_id VARCHAR(100) DEFAULT NULL,
+    status ENUM('pending', 'completed', 'failed') DEFAULT 'pending',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    completed_at TIMESTAMP NULL DEFAULT NULL,
+    FOREIGN KEY (user_id) REFERENCES users(id),
+    FOREIGN KEY (show_id) REFERENCES shows(id),
+    INDEX idx_transaction_id (transaction_id),
+    INDEX idx_user_id (user_id),
+    INDEX idx_status (status)
 );
 
 -- Insert default admin user (password: admin123)

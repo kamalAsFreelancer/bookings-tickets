@@ -2,6 +2,8 @@ import React, { useEffect, useState } from 'react';
 import { ArrowLeft } from 'lucide-react';
 import { api, Seat, Show } from '../api/api';
 import { useAuth } from '../context/AuthContext';
+import PaymentPage from './PaymentPage';
+import PaymentSuccess from './PaymentSuccess';
 
 interface SeatBookingProps {
   showId: number;
@@ -13,9 +15,10 @@ export default function SeatBooking({ showId, onNavigate }: SeatBookingProps) {
   const [seats, setSeats] = useState<Seat[]>([]);
   const [selectedSeats, setSelectedSeats] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
-  const [booking, setBooking] = useState(false);
-  const [confirmationCode, setConfirmationCode] = useState<string | null>(null);
   const [error, setError] = useState('');
+  const [showPayment, setShowPayment] = useState(false);
+  const [confirmationCode, setConfirmationCode] = useState<string | null>(null);
+  const [bookingId, setBookingId] = useState(0);
   const { user } = useAuth();
 
   useEffect(() => {
@@ -49,29 +52,20 @@ export default function SeatBooking({ showId, onNavigate }: SeatBookingProps) {
 
   const handleBooking = async () => {
     if (!user || selectedSeats.length === 0) return;
+    // Show payment page instead of directly booking
+    setShowPayment(true);
+  };
 
-    setBooking(true);
-    try {
-      const result = await api.bookTicket(user.id, showId, selectedSeats);
-      if (result.success) {
-        // store confirmation code and refresh seat layout so user can see their code
-        if (result.confirmation_code) {
-          setConfirmationCode(result.confirmation_code);
-        }
-        // refresh seats to reflect booked state
-        await loadSeats();
-        // show a success message inline instead of navigating away immediately
-        setError('');
-      } else {
-        const errorMsg = result.error || 'Booking failed';
-        setError(errorMsg);
-      }
-    } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Booking failed. Please try again.';
-      setError(errorMessage);
-    } finally {
-      setBooking(false);
-    }
+  const handlePaymentSuccess = (code: string, id: number) => {
+    setConfirmationCode(code);
+    setBookingId(id);
+    setSelectedSeats([]);
+    loadSeats();
+  };
+
+  const handlePaymentCancel = () => {
+    setShowPayment(false);
+    setSelectedSeats([]);
   };
 
   if (loading) {
@@ -79,6 +73,28 @@ export default function SeatBooking({ showId, onNavigate }: SeatBookingProps) {
       <div className="flex items-center justify-center min-h-screen bg-slate-900">
         <div className="text-xl text-white">Loading seats...</div>
       </div>
+    );
+  }
+
+  if (showPayment && show) {
+    return (
+      <PaymentPage
+        showId={showId}
+        selectedSeats={selectedSeats}
+        totalPrice={show.price * selectedSeats.length}
+        onSuccess={handlePaymentSuccess}
+        onCancel={handlePaymentCancel}
+      />
+    );
+  }
+
+  if (confirmationCode && bookingId) {
+    return (
+      <PaymentSuccess
+        confirmationCode={confirmationCode}
+        bookingId={bookingId}
+        onNavigate={onNavigate}
+      />
     );
   }
 
@@ -131,54 +147,56 @@ export default function SeatBooking({ showId, onNavigate }: SeatBookingProps) {
           </div>
         )}
 
-        <div className="bg-slate-800 rounded-xl p-4 sm:p-6 lg:p-8">
-          <div className="mb-6 sm:mb-8">
+        <div className="bg-slate-800 rounded-xl p-2 sm:p-6 lg:p-8 overflow-hidden">
+          <div className="mb-4 sm:mb-8">
             <div className="bg-slate-700 h-1 sm:h-2 rounded-t-full mb-1 sm:mb-2"></div>
             <div className="text-center text-gray-400 text-xs sm:text-sm">SCREEN</div>
           </div>
 
-          <div className="flex flex-col items-center gap-1 sm:gap-2 lg:gap-3 mb-6 sm:mb-8 overflow-x-auto">
-            {rows.map(row => (
-              <div key={row} className="flex items-center gap-1 sm:gap-2">
-                <div className="w-6 sm:w-8 text-white font-semibold text-xs sm:text-base text-center">{row}</div>
-                <div className="flex gap-1 sm:gap-2 overflow-x-auto max-w-full py-1">
-                  {Array.from({ length: seatsPerRow }, (_, i) => {
-                    const seatNumber = `${row}${i + 1}`;
-                    const status = getSeatStatus(seatNumber);
+          <div className="overflow-x-auto -mx-2 sm:mx-0">
+            <div className="flex flex-col items-center gap-1 sm:gap-2 lg:gap-3 mb-6 sm:mb-8 px-2 sm:px-0 min-w-min">
+              {rows.map(row => (
+                <div key={row} className="flex items-center gap-0.5 sm:gap-2 flex-nowrap">
+                  <div className="w-5 sm:w-8 text-white font-semibold text-xs sm:text-base text-center flex-shrink-0">{row}</div>
+                  <div className="flex gap-0.5 sm:gap-2">
+                    {Array.from({ length: seatsPerRow }, (_, i) => {
+                      const seatNumber = `${row}${i + 1}`;
+                      const status = getSeatStatus(seatNumber);
 
-                    const button = (
-                      <button
-                        key={seatNumber}
-                        onClick={() => toggleSeat(seatNumber, status === 'booked')}
-                        disabled={status === 'booked'}
-                        className={`w-8 h-8 sm:w-10 sm:h-10 rounded-t-lg text-sm sm:text-base font-semibold transition ${
-                          status === 'booked'
-                            ? 'bg-red-600 cursor-not-allowed text-white'
-                            : status === 'selected'
-                            ? 'bg-green-500 text-white'
-                            : 'bg-slate-600 hover:bg-slate-500 text-white'
-                        }`}
-                        title={seatNumber}
-                      >
-                        <span className="text-sm sm:text-base">{i + 1}</span>
-                      </button>
-                    );
-
-                    // Insert a passage (gap) after the 10th seat (i === 9)
-                    if (i === 10) {
-                      return (
-                        <React.Fragment key={`${seatNumber}-frag`}>
-                          <div className="w-3 sm:w-6" />
-                          {button}
-                        </React.Fragment>
+                      const button = (
+                        <button
+                          key={seatNumber}
+                          onClick={() => toggleSeat(seatNumber, status === 'booked')}
+                          disabled={status === 'booked'}
+                          className={`w-6 h-6 sm:w-10 sm:h-10 rounded-t-lg text-xs sm:text-base font-semibold transition flex-shrink-0 ${
+                            status === 'booked'
+                              ? 'bg-red-600 cursor-not-allowed text-white'
+                              : status === 'selected'
+                              ? 'bg-green-500 text-white'
+                              : 'bg-slate-600 hover:bg-slate-500 text-white'
+                          }`}
+                          title={seatNumber}
+                        >
+                          <span className="text-xs sm:text-base">{i + 1}</span>
+                        </button>
                       );
-                    }
 
-                    return button;
-                  })}
+                      // Insert a passage (gap) after the 10th seat (i === 9)
+                      if (i === 10) {
+                        return (
+                          <React.Fragment key={`${seatNumber}-frag`}>
+                            <div className="w-1 sm:w-6 flex-shrink-0" />
+                            {button}
+                          </React.Fragment>
+                        );
+                      }
+
+                      return button;
+                    })}
+                  </div>
                 </div>
-              </div>
-            ))}
+              ))}
+            </div>
           </div>
 
           <div className="flex items-center justify-center gap-4 sm:gap-8 mb-6 sm:mb-8 text-xs sm:text-sm flex-wrap justify-center">
@@ -217,41 +235,11 @@ export default function SeatBooking({ showId, onNavigate }: SeatBookingProps) {
 
               <button
                 onClick={handleBooking}
-                disabled={booking}
+                disabled={false}
                 className="w-full bg-red-600 hover:bg-red-700 disabled:bg-gray-600 text-white font-semibold py-3 sm:py-4 text-sm sm:text-base rounded-lg transition"
               >
-                {booking ? 'Processing...' : `Book ${selectedSeats.length} Seat${selectedSeats.length > 1 ? 's' : ''}`}
+                {`Book ${selectedSeats.length} Seat${selectedSeats.length > 1 ? 's' : ''}`}
               </button>
-            </div>
-          )}
-
-          {confirmationCode && (
-            <div className="mt-4 bg-slate-700 rounded-lg p-4 sm:p-6">
-              <div className="text-gray-400 text-xs sm:text-sm mb-2">Your confirmation code</div>
-              <div className="flex items-center justify-between gap-4">
-                <div className="font-mono text-2xl sm:text-3xl text-white tracking-widest">{confirmationCode}</div>
-                <div className="flex items-center gap-2">
-                  <button
-                    onClick={() => {
-                      try {
-                        navigator.clipboard.writeText(confirmationCode);
-                      } catch (e) {
-                        // fallback: do nothing
-                      }
-                    }}
-                    className="bg-green-600 hover:bg-green-700 text-white px-3 py-2 rounded-lg text-sm sm:text-base"
-                  >
-                    Copy
-                  </button>
-
-                  <button
-                    onClick={() => onNavigate('my-bookings')}
-                    className="bg-slate-600 hover:bg-slate-500 text-white px-3 py-2 rounded-lg text-sm sm:text-base"
-                  >
-                    My Bookings
-                  </button>
-                </div>
-              </div>
             </div>
           )}
         </div>

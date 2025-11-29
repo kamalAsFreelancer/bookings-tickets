@@ -41,6 +41,7 @@ export interface Booking {
   seat_numbers: string;
   total_price: number;
   booking_time: string;
+  confirmation_code?: string;
   movie_title?: string;
   date?: string;
   time?: string;
@@ -160,6 +161,32 @@ export const api = {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ confirmation_code: confirmationCode })
+    });
+    return handleResponse(response);
+  },
+
+  async initiateEsewaPayment(userId: number, showId: number, seatNumbers: string[], totalPrice: number) {
+    const response = await fetch(`${API_BASE_URL}/initiateEsewaPayment.php`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        user_id: userId,
+        show_id: showId,
+        seat_numbers: seatNumbers,
+        total_price: totalPrice
+      })
+    });
+    return handleResponse(response);
+  },
+
+  async verifyEsewaPayment(paymentId: number, esewaRefId: string) {
+    const response = await fetch(`${API_BASE_URL}/verifyEsewaPayment.php`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        payment_id: paymentId,
+        esewa_ref_id: esewaRefId
+      })
     });
     return handleResponse(response);
   }

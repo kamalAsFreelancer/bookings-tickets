@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { ArrowLeft, Search } from 'lucide-react';
+import { ArrowLeft, Search, Copy } from 'lucide-react';
 import { api, Booking } from '../../api/api';
 
 interface ViewBookingsProps {
@@ -118,7 +118,7 @@ export default function ViewBookings({ onNavigate }: ViewBookingsProps) {
                       key={booking.id}
                       className="bg-slate-700/30 sm:border-b sm:border-slate-700 sm:hover:bg-slate-700/50 transition p-4 sm:p-0 rounded-lg sm:rounded-none"
                     >
-                      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-7 sm:items-center gap-2 sm:gap-4 sm:py-4 sm:px-4">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-8 sm:items-center gap-2 sm:gap-4 sm:py-4 sm:px-4">
                         <div className="sm:col-span-1">
                           <div className="text-xs text-gray-400 sm:hidden font-semibold">ID</div>
                           <div className="text-white text-sm sm:text-base">#{booking.id}</div>
@@ -149,6 +149,30 @@ export default function ViewBookings({ onNavigate }: ViewBookingsProps) {
                         <div className="sm:col-span-1">
                           <div className="text-xs text-gray-400 sm:hidden font-semibold">Seats</div>
                           <div className="text-white font-mono text-xs sm:text-sm break-all">{booking.seat_numbers}</div>
+                        </div>
+
+                        <div className="sm:col-span-1">
+                          <div className="text-xs text-gray-400 sm:hidden font-semibold">Code</div>
+                          {booking.confirmation_code ? (
+                            <div className="flex items-center gap-2">
+                              <div className="text-blue-400 font-mono font-semibold text-xs sm:text-sm">{booking.confirmation_code}</div>
+                              <button
+                                onClick={() => {
+                                  try {
+                                    navigator.clipboard.writeText(booking.confirmation_code || '');
+                                  } catch (e) {
+                                    // fallback
+                                  }
+                                }}
+                                className="text-gray-400 hover:text-blue-400 transition"
+                                title="Copy code"
+                              >
+                                <Copy className="w-3 h-3 sm:w-4 sm:h-4" />
+                              </button>
+                            </div>
+                          ) : (
+                            <div className="text-gray-500 text-xs">N/A</div>
+                          )}
                         </div>
                         
                         <div className="sm:col-span-1 sm:text-right">

@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Film, Calendar, Ticket, DollarSign, Users, TrendingUp } from 'lucide-react';
+import { Film, Calendar, Ticket, DollarSign, Users, TrendingUp, CheckCircle } from 'lucide-react';
 import { api } from '../../api/api';
 
 interface Stats {
@@ -103,7 +103,7 @@ export default function AdminDashboard({ onNavigate }: AdminDashboardProps) {
           ))}
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 sm:gap-6">
           <button
             onClick={() => onNavigate('add-movie')}
             className="bg-slate-800 hover:bg-slate-700 rounded-xl p-6 sm:p-8 text-center transition group"
@@ -138,6 +138,15 @@ export default function AdminDashboard({ onNavigate }: AdminDashboardProps) {
             <TrendingUp className="w-10 h-10 sm:w-12 sm:h-12 text-yellow-400 mx-auto mb-3 sm:mb-4 group-hover:scale-110 transition" />
             <h3 className="text-lg sm:text-xl font-semibold text-white mb-2">Collections</h3>
             <p className="text-gray-400 text-xs sm:text-sm">View box office collections</p>
+          </button>
+
+          <button
+            onClick={() => onNavigate('validate-ticket')}
+            className="bg-slate-800 hover:bg-slate-700 rounded-xl p-6 sm:p-8 text-center transition group"
+          >
+            <CheckCircle className="w-10 h-10 sm:w-12 sm:h-12 text-cyan-400 mx-auto mb-3 sm:mb-4 group-hover:scale-110 transition" />
+            <h3 className="text-lg sm:text-xl font-semibold text-white mb-2">Verify Ticket</h3>
+            <p className="text-gray-400 text-xs sm:text-sm">Validate customer tickets by code</p>
           </button>
         </div>
       </div>

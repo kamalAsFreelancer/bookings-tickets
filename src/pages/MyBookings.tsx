@@ -140,6 +140,29 @@ export default function MyBookings({ onNavigate }: MyBookingsProps) {
                   </div>
                 </div>
 
+                {booking.confirmation_code && (
+                  <div className="mt-3 sm:mt-4 bg-blue-500/20 border border-blue-500 rounded-lg p-3 sm:p-4">
+                    <div className="text-gray-300 text-xs sm:text-sm mb-2 font-semibold">Confirmation Code:</div>
+                    <div className="flex items-center justify-between gap-3">
+                      <div className="text-white font-mono text-lg sm:text-xl tracking-widest">
+                        {booking.confirmation_code}
+                      </div>
+                      <button
+                        onClick={() => {
+                          try {
+                            navigator.clipboard.writeText(booking.confirmation_code || '');
+                          } catch (e) {
+                            // fallback
+                          }
+                        }}
+                        className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 sm:py-2 rounded text-xs sm:text-sm whitespace-nowrap"
+                      >
+                        Copy
+                      </button>
+                    </div>
+                  </div>
+                )}
+
                 <div className="mt-3 sm:mt-4 text-xs sm:text-sm text-gray-500">
                   Booked on: {new Date(booking.booking_time).toLocaleString()}
                 </div>
