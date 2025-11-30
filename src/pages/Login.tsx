@@ -94,7 +94,7 @@ export default function Login({ onNavigate }: LoginProps) {
         </div>
 
         <div className="mt-6 pt-6 border-t border-slate-700 text-center text-gray-400 text-sm">
-          <p>Admin Login: admin@cinema.com / admin123</p>
+          <p>Copyright @Kamal Pahan</p>
         </div>
       </div>
     </div>

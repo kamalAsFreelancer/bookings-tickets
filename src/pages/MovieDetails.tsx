@@ -91,12 +91,12 @@ export default function MovieDetails({ movieId, onNavigate }: MovieDetailsProps)
           Back to Movies
         </button>
 
-        <div className="grid md:grid-cols-2 gap-6 sm:gap-8 mb-8 sm:mb-12">
-          <div className="overflow-hidden rounded-xl shadow-2xl bg-black flex items-center justify-center">
+        <div className="flex flex-col md:grid md:grid-cols-2 gap-6 sm:gap-8 mb-8 sm:mb-12">
+          <div className="overflow-hidden rounded-xl shadow-2xl bg-black flex items-center justify-center w-full">
             <img
               src={movie.poster || 'https://images.pexels.com/photos/7991319/pexels-photo-7991319.jpeg'}
               alt={movie.title}
-              className="w-full h-64 sm:h-80 lg:h-96 object-contain"
+              className="w-48 sm:w-64 h-64 sm:h-80 lg:h-96 object-contain"
             />
           </div>
 

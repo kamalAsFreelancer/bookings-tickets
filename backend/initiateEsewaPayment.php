@@ -4,8 +4,14 @@ require_once 'db.php';
 
 // eSewa Configuration
 define('ESEWA_MERCHANT_CODE', 'EPAYTEST'); // Use your actual merchant code
-define('ESEWA_SUCCESS_URL', 'http://localhost/project/#/payment-success');
-define('ESEWA_FAILURE_URL', 'http://localhost/project/#/payment-failure');
+
+// Get the host dynamically to work with localhost and mobile IPs
+$protocol = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? 'https' : 'http';
+$host = $_SERVER['HTTP_HOST'];
+$baseUrl = $protocol . '://' . $host;
+
+define('ESEWA_SUCCESS_URL', $baseUrl . '/project/#/payment-success');
+define('ESEWA_FAILURE_URL', $baseUrl . '/project/#/payment-failure');
 define('ESEWA_API_URL', 'https://uat.esewa.com.np/epay/transaction/initiate/'); // UAT URL for testing
 
 $json = file_get_contents('php://input');
@@ -97,3 +103,15 @@ $db->close();
     $db->close();
     sendError('Payment initiation failed: ' . $e->getMessage(), 400);
 }
+
+function sendResponse($data) {
+    echo json_encode($data);
+    exit();
+}
+
+function sendError($message, $statusCode = 400) {
+    http_response_code($statusCode);
+    echo json_encode(['success' => false, 'error' => $message]);
+    exit();
+}
+?>
