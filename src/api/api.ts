@@ -1,4 +1,4 @@
-const API_BASE_URL = 'booking-tk.infinityferrapp.com/backend/db.php';
+const API_BASE_URL = 'booking-tk.infinityferrapp.com/backend/';
 
 export interface User {
   id: number;
