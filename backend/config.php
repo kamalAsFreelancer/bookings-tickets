@@ -1,9 +1,9 @@
 <?php
 // Database configuration
-define('DB_HOST', 'localhost');
-define('DB_USER', 'root');
-define('DB_PASS', '');
-define('DB_NAME', 'cinema_booking');
+define('DB_HOST', 'sql321.infinityfree.com');
+define('DB_USER', 'if0_40543717');
+define('DB_PASS', 'stM1FJgm5rU');
+define('DB_NAME', 'if0_40543717_cinema_booking');
 
 // CORS headers for React frontend
 header('Access-Control-Allow-Origin: *');
